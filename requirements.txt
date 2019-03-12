@@ -8,3 +8,4 @@ pandas==0.24.1
 pandas-datareader==0.6.0
 plotly==3.6.1
 police-api-client==1.2.2
+gunicorn==19.9.0
