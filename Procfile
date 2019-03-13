@@ -1,1 +1,1 @@
-web: gunicorn app:server
+web: gunicorn crime_stats_dash:server
