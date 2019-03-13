@@ -3,9 +3,7 @@ dash-core-components==0.43.1
 dash-html-components==0.13.5
 dash-renderer==0.18.0
 dash-table==3.3.0
-numpy==1.15.4
 pandas==0.24.1
-pandas-datareader==0.6.0
 plotly==3.6.1
 police-api-client==1.2.2
-gunicorn==19.9.0
+gunicorn>=19.9.0
