@@ -1,4 +1,6 @@
+# This version is currently powering heroku app.
 # Dash components
+
 import dash
 import dash_core_components as dcc 
 import dash_html_components as html
@@ -7,7 +9,6 @@ from dash.dependencies import Input, Output, State
 
 # Plotly components for displaying points in map
 from plotly import graph_objs as go 
-# from plotly.graph_objs import *
 
 # Pandas for creating dataframe for maps
 import pandas as pd
@@ -16,7 +17,24 @@ import pandas as pd
 from police_api import PoliceAPI
 
 # Mapbox token for accessing the Mapbox API
+
 MAPBOX = 'pk.eyJ1IjoidnNndXJ1bmciLCJhIjoiY2lyNnVibDZrMDAwNmlrbm4wNDhmeW5neiJ9.D8CS9O3fheYIAotVYMyxcQ'
+
+CRIME_CATEGORY_COLOUR ={
+                        'Anti-social behaviour':'Orange',
+                        'Burglary':'Red',
+                        'Violence and sexual offences':'Magenta',
+                        'Drugs':'Blue',
+                        'Bicycle theft':'Green',
+                        'Criminal damage and arson':'light yellow',
+                        'Other theft':'light green',
+                        'Possession of weapons':'cyan',
+                        'Public order':'white',
+                        'Shoplifting':'grey',
+                        'Theft from the person':'light orange',
+                        'Vehicle crime':'brown',
+                        'Other crime':'light blue',
+                        'Robbery':'Yellow'}
 
 police = PoliceAPI()
 
@@ -31,6 +49,7 @@ def format_date_range(date_range):
         dt = month_dict[int(a[1])]+' '+a[0]
         new_date_range.append((dt))
     return new_date_range
+
 
 new_dt_range = format_date_range((dt_range))
 date_range = dict(zip(new_dt_range, dt_range))
@@ -57,6 +76,7 @@ def get_neighbourhood_id(police_name, neighbourhood_name):
     if neighbourhood != []:
         return neighbourhood[0]
 
+
 def get_neighbourhood_boundary(police_name, neighbourhood_name):
     if (police_name is not None) and (neighbourhood_name is not None):
         police_id = get_police_force_id(police_name)
@@ -76,6 +96,7 @@ def get_neighbourhood_centre(police_name, neighbourhood_name):
     else:
         return {'lon':22.0, 'lat':52.31} # approx centre of GB.
 
+
 column_headings = ['Crime Month', 'Crime Category', 'Location Name', 'Latitude', 'Longitude']
 summary_heading = ['Crime Category', 'Total']
 
@@ -85,11 +106,12 @@ def create_data_dict(column_heading_list, crime_object_list):
         data = [c.month, c.category.name, c.location.name, c.location.latitude, c.location.longitude]
         interim_dict = dict(zip(column_heading_list, data))
         crime_data.append(interim_dict)
-    
+
     if crime_data != []:
         return crime_data
     else:
         return None
+
 
 def calculate_crime_summary(summary_heading, df):
     """
@@ -108,6 +130,7 @@ def calculate_crime_summary(summary_heading, df):
 
 def calculate_yearly_crime_summary(police_force, neighbourhood_name):
     pass
+
 
 def create_yearly_crime_graph(input_data):
     pass
@@ -140,6 +163,7 @@ layout_table = dict(
 )
 
 #################################################################################
+
 app.layout = html.Div([
                 html.Div(id='page-title'),
                 html.Div(id='neighbourhood_name'),
@@ -182,10 +206,12 @@ app.layout = html.Div([
 
 
 # Callback to update the page title of police force
+
 @app.callback(
     Output(component_id='page-title',component_property='children'),
     [Input(component_id='police_force_dropdown', component_property='value')]
 )
+
 
 def update_page_title(police_force):
     if police_force is not None:
@@ -194,10 +220,12 @@ def update_page_title(police_force):
         return html.H1('Choose a Police Force')
 
 # Callback to update the H2.
+
 @app.callback(
     Output(component_id='neighbourhood_name',component_property='children'),
     [Input(component_id='police_neighbourhood', component_property='value')]
 )
+
 
 def update_neighbourhood_name(neighbourhood_name):
     if neighbourhood_name is not None:
@@ -205,11 +233,13 @@ def update_neighbourhood_name(neighbourhood_name):
     else:
         return html.H2('Neighbourhood Not Selected')                
 
+
 # Callback to populate the neighbourhood dropdown based on police force dropdown selection
 @app.callback(
     Output(component_id='police_neighbourhood',component_property='options'),
     [Input(component_id='police_force_dropdown', component_property='value')]
 )
+
 def populate_police_neighbourhood(selected_police_force):
     """
     Function to populate the neighbourhoods based on police force selected.
@@ -221,6 +251,7 @@ def populate_police_neighbourhood(selected_police_force):
     else:
         return None
 
+
 # Callback to create crime table  
 @app.callback(
     Output(component_id='crime_div', component_property='children'),
@@ -229,8 +260,8 @@ def populate_police_neighbourhood(selected_police_force):
      State(component_id='police_neighbourhood', component_property='value'),
      State(component_id='crime_date', component_property='value')])
 
+
 def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
-    
     if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
         neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
         crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
@@ -289,6 +320,7 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
     else:
         return None
 
+
 # Generating map each time input changes
 @app.callback(
     Output(component_id='crime_map', component_property='figure'),
@@ -298,7 +330,7 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
      State(component_id='crime_date', component_property='value')])
 
 def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
-
+    
     if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
         neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
         crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
@@ -308,41 +340,49 @@ def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_
             df = pd.DataFrame(table).dropna()
             data = dict(
                 data =[
-                    {'type':'scattermapbox',
-                    'lat':df['Latitude'],
-                    'lon':df['Longitude'],
-                    'mode':'markers',
-                    'text':[[f"Crime Category:{c}<br>Location:{l}"]for c, l in zip(df['Crime Category'], df['Location Name'])]
+                    {
+                        'type':'scattermapbox',
+                        'lat':df['Latitude'],
+                        'lon':df['Longitude'],
+                        'mode':'markers',
+                        'marker':{
+                            'color':[CRIME_CATEGORY_COLOUR[d] for d in df['Crime Category']]
+                        },
+                        'text':[[f"Crime Category:{c}<br>Location:{l}"]for c, l in zip(df['Crime Category'], df['Location Name'])]
                     }],
                 layout=dict(
-                    autosize=True,
-                height=500,
-                font=dict(color="#191A1A"),
-                titlefont=dict(color="#191A1A", size='14'),
-                margin=dict(
-                        l=35,
-                        r=35,
-                        b=35,
-                        t=45),
-                hovermode="closest",
-                plot_bgcolor='#fffcfc',
-                paper_bgcolor='#fffcfc',
-                legend=dict(font=dict(size=10), orientation='h'),
-                title='Anonymised Crime Location',
-                mapbox=dict(
-                        accesstoken=MAPBOX,
-                        style="dark",
-                        center=dict(
-                        lon=neighbourhood_centre['lon'],
-                        lat=neighbourhood_centre['lat']
+                        autosize=True,
+                        height=500,
+                        font=dict(color="#191A1A"),
+                        titlefont=dict(color="#191A1A", size='14'),
+                        margin=dict(
+                                l=35,
+                                r=35,
+                                b=35,
+                                t=45),
+                        hovermode="closest",
+                        plot_bgcolor='#fffcfc',
+                        paper_bgcolor='#fffcfc',
+                        legend=dict(
+                                font=dict(size=10),
+                                orientation='h'),
+                        title='Anonymised Crime Location',
+                        mapbox=dict(
+                                accesstoken=MAPBOX,
+                                style="dark",
+                                center=dict(
+                                        lon=neighbourhood_centre['lon'],
+                                        lat=neighbourhood_centre['lat']
                                 ),
-                zoom=12,
+                                zoom=12
                         )
                     )
             )
             return data
         else:
+
             # return this data when no crime data found.
+
             no_data = dict(
                 data =[
                     {'type':'scattermapbox',
@@ -352,34 +392,66 @@ def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_
                     }],
                 layout=dict(
                     autosize=True,
-                height=500,
-                font=dict(color="#191A1A"),
-                titlefont=dict(color="#191A1A", size='14'),
-                margin=dict(
-                        l=35,
-                        r=35,
-                        b=35,
-                        t=45),
-                hovermode="closest",
-                plot_bgcolor='#fffcfc',
-                paper_bgcolor='#fffcfc',
-                legend=dict(font=dict(size=10), orientation='h'),
-                title=f'No crime in {crime_date_dropdown}.',
-                mapbox=dict(
-                        accesstoken=MAPBOX,
-                        style="light",
-                        center=dict(
-                        lon=neighbourhood_centre['lon'],
-                        lat=neighbourhood_centre['lat']
-                                ),
-                zoom=12,
-                        )
+                    height=500,
+                    font=dict(color="#191A1A"),
+                    titlefont=dict(color="#191A1A", size='14'),
+                    margin=dict(
+                            l=35,
+                            r=35,
+                            b=35,
+                            t=45),
+                    hovermode="closest",
+                    plot_bgcolor='#fffcfc',
+                    paper_bgcolor='#fffcfc',
+                    legend=dict(font=dict(size=10), orientation='h'),
+                    title=f'No crime in {crime_date_dropdown}.',
+                    mapbox=dict(
+                            accesstoken=MAPBOX,
+                            style="light",
+                            center=dict(
+                                    lon=neighbourhood_centre['lon'],
+                                    lat=neighbourhood_centre['lat']
+                                    ),
+                            zoom=12,
+                            )
                     )
             )
             return no_data
     else:
-        return None
-
+        startup_map = dict(
+                        data =[{
+                            'type':'scattermapbox',
+                            'lat':54.5,
+                            'lon':-2,
+                            'mode':'markers'
+                            }],
+                        layout=dict(
+                                autosize=True,
+                                height=500,
+                                font=dict(color="#191A1A"),
+                                titlefont=dict(color="#191A1A", size='14'),
+                                margin=dict(
+                                        l=35,
+                                        r=35,
+                                        b=35,
+                                        t=45),
+                                hovermode="closest",
+                                plot_bgcolor='#fffcfc',
+                                paper_bgcolor='#fffcfc',
+                                legend=dict(font=dict(size=10), orientation='h'),
+                                title='Waiting for all user parameters',
+                                mapbox=dict(
+                                        accesstoken=MAPBOX,
+                                        style="dark",
+                                        center=dict(
+                                                lon=-2,
+                                                lat=54.5
+                                                ),
+                                        zoom=4,
+                            )
+                    )
+            )
+        return startup_map
 
 # Running the app
 if __name__ == "__main__":
