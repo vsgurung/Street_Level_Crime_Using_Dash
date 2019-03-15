@@ -94,7 +94,7 @@ def get_neighbourhood_centre(police_name, neighbourhood_name):
         coords = {'lon':neighbourhood.centre['longitude'], 'lat':neighbourhood.centre['latitude']}
         return coords
     else:
-        return {'lon':22.0, 'lat':52.31} # approx centre of GB.
+        return {'lon':-2, 'lat':54.5} # approx centre of GB.
 
 
 column_headings = ['Crime Month', 'Crime Category', 'Location Name', 'Latitude', 'Longitude']
