@@ -140,7 +140,7 @@ def create_yearly_crime_graph(input_data):
 external_stylesheets = ['https://codepen.io/amyoshino/pen/jzXypZ.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
-app.title = 'Stree Level Crime'
+app.title = 'Street Level Crime'
 
 # Crime table layout
 
