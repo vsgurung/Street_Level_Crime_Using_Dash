@@ -128,13 +128,6 @@ def calculate_crime_summary(summary_heading, df):
     else:
         return None
 
-def calculate_yearly_crime_summary(police_force, neighbourhood_name):
-    pass
-
-
-def create_yearly_crime_graph(input_data):
-    pass
-
 
 # Dash app
 external_stylesheets = ['https://codepen.io/amyoshino/pen/jzXypZ.css']
