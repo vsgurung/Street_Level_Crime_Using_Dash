@@ -462,7 +462,7 @@ def update_media_links(input_police_force):
         police_id = get_police_force_id(input_police_force)
         force = police.get_force(police_id)
         media = force.engagement_methods
-        data = [html.Div(dcc.Markdown(f'''[{g["title"].title()}]({g["url"]})'''), className='two columns', style={'display':'inline-block'}) for g in media]
+        data = [html.Div(html.A(f'{g["title"].title()}', href=f'{g["url"]}', target='_blank'), className='two columns', style={'display':'inline-block'})for g in media]
         return data
     else:
         return None
