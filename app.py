@@ -1,4 +1,5 @@
 # This version is currently powering heroku app.
+
 # Dash components
 
 import dash
@@ -128,7 +129,6 @@ def calculate_crime_summary(summary_heading, df):
     else:
         return None
 
-
 # Dash app
 external_stylesheets = ['https://codepen.io/amyoshino/pen/jzXypZ.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -194,7 +194,11 @@ app.layout = html.Div([
                 ),
                 html.Div(
                     id='crime_div',
-                    className='row')
+                    className='row'),
+                html.Div(
+                    id='social_media',
+                    className='row'
+                )
 ])
 
 
@@ -445,6 +449,23 @@ def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_
                     )
             )
         return startup_map
+
+# Update the social media and website link
+@app.callback(
+    Output(component_id='social_media', component_property='children'),
+    [Input(component_id='police_force_dropdown', component_property='value')]
+    )
+
+def update_media_links(input_police_force):
+    _media = []
+    if input_police_force is not None:
+        police_id = get_police_force_id(input_police_force)
+        force = police.get_force(police_id)
+        media = force.engagement_methods
+        data = [html.Div(dcc.Markdown(f'''[{g["title"].title()}]({g["url"]})'''), className='two columns', style={'display':'inline-block'}) for g in media]
+        return data
+    else:
+        return None
 
 # Running the app
 if __name__ == "__main__":
