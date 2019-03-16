@@ -8,6 +8,9 @@ import dash_html_components as html
 import dash_table
 from dash.dependencies import Input, Output, State
 
+import os 
+import flask
+
 # Plotly components for displaying points in map
 from plotly import graph_objs as go 
 
@@ -132,8 +135,10 @@ def calculate_crime_summary(summary_heading, df):
 # Dash app
 external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito',
                         'https://codepen.io/chriddyp/pen/bWLwgP.css'] 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-server = app.server
+
+server = flask.Flask(__name__)
+server.secret_key = os.environ.get('secret_key', 'secret')
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 app.title = 'Street Level Crime'
 
 # Crime table layout
