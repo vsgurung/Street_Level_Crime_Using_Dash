@@ -7,3 +7,4 @@ pandas==0.24.1
 plotly==3.6.1
 police-api-client==1.2.2
 gunicorn>=19.9.0
+flask-caching>=1.6.0

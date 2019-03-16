@@ -8,17 +8,29 @@ import dash_html_components as html
 import dash_table
 from dash.dependencies import Input, Output, State
 
-import os 
-import flask
-
 # Plotly components for displaying points in map
 from plotly import graph_objs as go 
 
 # Pandas for creating dataframe for maps
 import pandas as pd
 
+# Caching
+from flask_caching import Cache
+
 # Police api
 from police_api import PoliceAPI
+
+# Dash app
+external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito',
+                        'https://codepen.io/chriddyp/pen/bWLwgP.css'] 
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+# Below is needed for heroku deployment
+server = app.server
+cache = Cache(server, config={"CACHE_TYPE":"simple"})
+app.title = 'Street Level Crime'
+
 
 # Mapbox token for accessing the Mapbox API
 
@@ -72,7 +84,7 @@ def get_police_force_id(police_name):
         return None
 
 # Get neighbourhood boundary for finding crime
-
+@cache.memoize(10)
 def get_neighbourhood_id(police_name, neighbourhood_name):
     force_id = get_police_force_id(police_name)
     neighbourhoods_police = police.get_force(force_id).neighbourhoods
@@ -80,7 +92,7 @@ def get_neighbourhood_id(police_name, neighbourhood_name):
     if neighbourhood != []:
         return neighbourhood[0]
 
-
+@cache.memoize(10)
 def get_neighbourhood_boundary(police_name, neighbourhood_name):
     if (police_name is not None) and (neighbourhood_name is not None):
         police_id = get_police_force_id(police_name)
@@ -90,6 +102,7 @@ def get_neighbourhood_boundary(police_name, neighbourhood_name):
     else:
         return None
 
+@cache.memoize(10)
 def get_neighbourhood_centre(police_name, neighbourhood_name):
     if (police_name is not None) and (neighbourhood_name is not None):
         police_id = get_police_force_id(police_name)
@@ -104,6 +117,7 @@ def get_neighbourhood_centre(police_name, neighbourhood_name):
 column_headings = ['Crime Month', 'Crime Category', 'Location Name', 'Latitude', 'Longitude']
 summary_heading = ['Crime Category', 'Total']
 
+@cache.memoize(10)
 def create_data_dict(column_heading_list, crime_object_list):
     crime_data = []
     for c in crime_object_list:
@@ -116,7 +130,7 @@ def create_data_dict(column_heading_list, crime_object_list):
     else:
         return None
 
-
+@cache.memoize(10)
 def calculate_crime_summary(summary_heading, df):
     """
     Function to calculate total of each type of crime
@@ -131,15 +145,6 @@ def calculate_crime_summary(summary_heading, df):
         return data
     else:
         return None
-
-# Dash app
-external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito',
-                        'https://codepen.io/chriddyp/pen/bWLwgP.css'] 
-
-server = flask.Flask(__name__)
-server.secret_key = os.environ.get('secret_key', 'secret')
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
-app.title = 'Street Level Crime'
 
 # Crime table layout
 
