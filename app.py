@@ -129,8 +129,23 @@ def calculate_crime_summary(summary_heading, df):
     else:
         return None
 
+def calculate_yearly_crime_summary(police_force, neighbourhood_name):
+    pass
+
+
+def create_yearly_crime_graph(input_data):
+    pass
+
+def get_force_engagement_methods(force_name):
+    if force_name is not None:
+        pass
+
+    else:
+        return None
+
 # Dash app
-external_stylesheets = ['https://codepen.io/amyoshino/pen/jzXypZ.css']
+external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito',
+                        'https://codepen.io/chriddyp/pen/bWLwgP.css'] 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 server = app.server
 app.title = 'Street Level Crime'
@@ -161,9 +176,9 @@ app.layout = html.Div([
                 html.Div(id='page-title'),
                 html.Div(id='neighbourhood_name'),
                 html.Div([
-                        html.Div(html.H4('Select Police Area'), className='three columns', style={'width':'35%', 'display':'inline-block', 'textAlign':'center'}),
-                        html.Div(html.H4('Select Police Neighbourhood'), className='three columns', style={'width':'35%', 'display':'inline-block', 'textAlign':'center'}),
-                        html.Div(html.H4('Select Date'), className='two columns', style={'width':'10%', 'display':'inline-block', 'textAlign':'center'})], className='row'),
+                        html.Div(html.H4('Select Police Area'), className='three columns', style={'width':'35%', 'display':'inline-block', 'textAlign':'center','fontFamily':'nunito'}),
+                        html.Div(html.H4('Select Police Neighbourhood'), className='three columns', style={'width':'35%', 'display':'inline-block', 'textAlign':'center','fontFamily':'nunito'}),
+                        html.Div(html.H4('Select Date'), className='two columns', style={'width':'10%', 'display':'inline-block', 'textAlign':'center','fontFamily':'nunito'})], className='row'),
                 html.Div([
                     html.Div([dcc.Dropdown(
                         id='police_force_dropdown',
@@ -212,9 +227,9 @@ app.layout = html.Div([
 
 def update_page_title(police_force):
     if police_force is not None:
-        return html.H1(f'Crime Data for {police_force}', style={'textAlign':'center'})
+        return html.H1(f'Crime Data for {police_force}', style={'textAlign':'center','fontFamily':'nunito'})
     else:
-        return html.H1('Choose a Police Force')
+        return html.H1('Choose a Police Force', style={'fontFamily':'nunito'})
 
 # Callback to update the H2.
 
@@ -226,9 +241,9 @@ def update_page_title(police_force):
 
 def update_neighbourhood_name(neighbourhood_name):
     if neighbourhood_name is not None:
-        return html.H2(f'Neighbourhood: {neighbourhood_name}', style={'textAlign':'center'})
+        return html.H2(f'Neighbourhood: {neighbourhood_name}', style={'textAlign':'center','fontFamily':'nunito'})
     else:
-        return html.H2('Neighbourhood Not Selected')                
+        return html.H2('Neighbourhood Not Selected', style={'fontFamily':'nunito'})                
 
 
 # Callback to populate the neighbourhood dropdown based on police force dropdown selection
@@ -268,8 +283,8 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
             crime_counts = calculate_crime_summary(summary_heading, df)
             table_div = [
                     html.Div([
-                        html.Div(html.H4('Crime Data'), className='eight columns', style={'textAlign':'center'}),
-                        html.Div(html.H4('Summary'), className='four columns', style={'textAlign':'center'})], className='row'),
+                        html.Div(html.H4('Crime Data'), className='eight columns', style={'textAlign':'center','fontFamily':'nunito'}),
+                        html.Div(html.H4('Summary'), className='four columns', style={'textAlign':'center','fontFamily':'nunito'})], className='row'),
                         html.Div([
                             html.Div(
                                 dash_table.DataTable(
@@ -283,9 +298,10 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
                                     style_header={
                                         'backgroundColor':'#a9c1a1',
                                         'fontWeight':'bold',
-                                        'textAlign':'center'
+                                        'textAlign':'center',
+                                        'fontFamily':'nunito'
                                     },
-                                    style_cell={'textAlign':'left'},
+                                    style_cell={'textAlign':'left','fontFamily':'nunito'},
                                     style_cell_conditional=[
                                         {'if':{'column_id':'Crime Month'},
                                         'width':'120px'}],
@@ -302,9 +318,10 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
                                     style_header={
                                         'backgroundColor':'#a9c1a1',
                                         'fontWeight':'bold',
-                                        'textAlign':'center'
+                                        'textAlign':'center',
+                                        'fontFamily':'nunito'
                                     },
-                                    style_cell={'textAlign':'left'},
+                                    style_cell={'textAlign':'left','fontFamily':'nunito'},
                                     style_table={
                                         'maxHeight':'500',
                                         'overflowY':'scroll',
@@ -464,7 +481,10 @@ def update_media_links(input_police_force):
         police_id = get_police_force_id(input_police_force)
         force = police.get_force(police_id)
         media = force.engagement_methods
-        data = [html.Div(html.A(f'{g["title"].title()}', href=f'{g["url"]}', target='_blank'), className='two columns', style={'display':'inline-block'})for g in media]
+        data = [
+            html.Div(
+                html.A(f'{g["title"].title()}', href=f'{g["url"]}', target='_blank'), 
+                className='two columns', style={'display':'inline-block','fontFamily':'nunito'})for g in media]
         return data
     else:
         return None
