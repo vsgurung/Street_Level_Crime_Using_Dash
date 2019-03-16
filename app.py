@@ -129,25 +129,10 @@ def calculate_crime_summary(summary_heading, df):
     else:
         return None
 
-def calculate_yearly_crime_summary(police_force, neighbourhood_name):
-    pass
-
-
-def create_yearly_crime_graph(input_data):
-    pass
-
-def get_force_engagement_methods(force_name):
-    if force_name is not None:
-        pass
-
-    else:
-        return None
-
 # Dash app
 external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito',
                         'https://codepen.io/chriddyp/pen/bWLwgP.css'] 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-server = app.server
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
 app.title = 'Street Level Crime'
 
 # Crime table layout
