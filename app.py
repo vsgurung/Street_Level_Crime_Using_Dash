@@ -472,7 +472,6 @@ def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_
     )
 
 def update_media_links(input_police_force):
-    _media = []
     if input_police_force is not None:
         police_id = get_police_force_id(input_police_force)
         force = police.get_force(police_id)
