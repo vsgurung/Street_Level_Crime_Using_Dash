@@ -132,7 +132,8 @@ def calculate_crime_summary(summary_heading, df):
 # Dash app
 external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito',
                         'https://codepen.io/chriddyp/pen/bWLwgP.css'] 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+server = app.server
 app.title = 'Street Level Crime'
 
 # Crime table layout
