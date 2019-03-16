@@ -285,6 +285,7 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
                                         'fontWeight':'bold',
                                         'textAlign':'center'
                                     },
+                                    style_cell={'textAlign':'left'},
                                     style_cell_conditional=[
                                         {'if':{'column_id':'Crime Month'},
                                         'width':'120px'}],
@@ -303,6 +304,7 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
                                         'fontWeight':'bold',
                                         'textAlign':'center'
                                     },
+                                    style_cell={'textAlign':'left'},
                                     style_table={
                                         'maxHeight':'500',
                                         'overflowY':'scroll',
