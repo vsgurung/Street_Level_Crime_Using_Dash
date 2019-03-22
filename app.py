@@ -22,7 +22,8 @@ from police_api import PoliceAPI
 
 # Dash app
 external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito',
-                        'https://codepen.io/chriddyp/pen/bWLwgP.css'] 
+                        'https://codepen.io/chriddyp/pen/bWLwgP.css',
+                        'https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css'] 
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
