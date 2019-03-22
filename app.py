@@ -32,7 +32,10 @@ cache = Cache(server, config={"CACHE_TYPE":"simple"})
 app.title = 'Street Level Crime'
 
 
-# Mapbox token for accessing the Mapbox API
+# Constants which will not change including the Mapbox token for accessing the Mapbox API
+COLUMN_HEADING = ['Crime Month', 'Crime Category', 'Location Name', 'Latitude', 'Longitude']
+
+SUMMARY_HEADING = ['Crime Category', 'Total']
 
 MAPBOX = 'pk.eyJ1IjoidnNndXJ1bmciLCJhIjoiY2lyNnVibDZrMDAwNmlrbm4wNDhmeW5neiJ9.D8CS9O3fheYIAotVYMyxcQ'
 
@@ -114,9 +117,6 @@ def get_neighbourhood_centre(police_name, neighbourhood_name):
         return {'lon':-2, 'lat':54.5} # approx centre of GB.
 
 
-column_headings = ['Crime Month', 'Crime Category', 'Location Name', 'Latitude', 'Longitude']
-summary_heading = ['Crime Category', 'Total']
-
 @cache.memoize(10)
 def create_data_dict(column_heading_list, crime_object_list):
     crime_data = []
@@ -131,7 +131,7 @@ def create_data_dict(column_heading_list, crime_object_list):
         return None
 
 @cache.memoize(10)
-def calculate_crime_summary(summary_heading, df):
+def calculate_crime_summary(SUMMARY_HEADING, df):
     """
     Function to calculate total of each type of crime
     Returns dictionary of crimetype and total as key value pair.
@@ -139,7 +139,7 @@ def calculate_crime_summary(summary_heading, df):
     data = []
     crime_dictionary = df['Crime Category'].value_counts().to_dict()
     for k, v in crime_dictionary.items():
-        interim_dict ={f'{summary_heading[0]}':k, f'{summary_heading[1]}':v}
+        interim_dict ={f'{SUMMARY_HEADING[0]}':k, f'{SUMMARY_HEADING[1]}':v}
         data.append(interim_dict)
     if data != []:
         return data
@@ -273,10 +273,10 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
     if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
         neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
         crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
-        table = create_data_dict(column_headings, crimes)
+        table = create_data_dict(COLUMN_HEADING, crimes)
         if table is not None:
             df = pd.DataFrame(table).dropna()
-            crime_counts = calculate_crime_summary(summary_heading, df)
+            crime_counts = calculate_crime_summary(SUMMARY_HEADING, df)
             table_div = [
                     html.Div([
                         html.Div(html.H4('Crime Data'), className='eight columns', style={'textAlign':'center','fontFamily':'nunito'}),
@@ -285,7 +285,7 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
                             html.Div(
                                 dash_table.DataTable(
                                     id='crime_table',
-                                    columns = [{'name':i, 'id':i} for i in column_headings],
+                                    columns = [{'name':i, 'id':i} for i in COLUMN_HEADING],
                                     sorting=True,
                                     row_selectable='multi',
                                     n_fixed_rows=1,
@@ -308,7 +308,7 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
                             html.Div(
                                 dash_table.DataTable(
                                     id='crime_summary',
-                                    columns = [{'name':i, 'id':i} for i in summary_heading],
+                                    columns = [{'name':i, 'id':i} for i in SUMMARY_HEADING],
                                     n_fixed_rows=1,
                                     data = crime_counts,
                                     style_header={
@@ -346,7 +346,7 @@ def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_
     if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
         neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
         crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
-        table = create_data_dict(column_headings, crimes)
+        table = create_data_dict(COLUMN_HEADING, crimes)
         neighbourhood_centre = get_neighbourhood_centre(police_force_dropdown, neighbourhood_dropdown)
         if table is not None:
             df = pd.DataFrame(table).dropna()
