@@ -146,6 +146,42 @@ def calculate_crime_summary(SUMMARY_HEADING, df):
     else:
         return None
 
+@cache.memoize(10)
+def generate_startup_map():
+    startup_map = dict(
+                        data =[{
+                            'type':'scattermapbox',
+                            'lat':54.5,
+                            'lon':-2,
+                            'mode':'markers'
+                            }],
+                        layout=dict(
+                                autosize=True,
+                                height=500,
+                                font=dict(color="#191A1A"),
+                                titlefont=dict(color="#191A1A", size='14'),
+                                margin=dict(
+                                        l=35,
+                                        r=35,
+                                        b=35,
+                                        t=45),
+                                hovermode="closest",
+                                plot_bgcolor='#fffcfc',
+                                paper_bgcolor='#fffcfc',
+                                legend=dict(font=dict(size=10), orientation='h'),
+                                title='Waiting for all user parameters',
+                                mapbox=dict(
+                                        accesstoken=MAPBOX,
+                                        style="dark",
+                                        center=dict(
+                                                lon=-2,
+                                                lat=54.5
+                                                ),
+                                        zoom=4,
+                            )
+                    )
+            )
+    return startup_map
 # Crime table layout
 
 #  Layouts
@@ -343,7 +379,10 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
 
 def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
     
-    if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
+    if n_clicks==0 or n_clicks is None:
+        start_map = generate_startup_map()
+        return start_map
+    elif police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
         neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
         crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
         table = create_data_dict(COLUMN_HEADING, crimes)
@@ -391,10 +430,7 @@ def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_
                     )
             )
             return data
-        else:
-
-            # return this data when no crime data found.
-
+        else:  # return this data when no crime data found.
             no_data = dict(
                 data =[
                     {'type':'scattermapbox',
@@ -429,41 +465,6 @@ def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_
                     )
             )
             return no_data
-    else:
-        startup_map = dict(
-                        data =[{
-                            'type':'scattermapbox',
-                            'lat':54.5,
-                            'lon':-2,
-                            'mode':'markers'
-                            }],
-                        layout=dict(
-                                autosize=True,
-                                height=500,
-                                font=dict(color="#191A1A"),
-                                titlefont=dict(color="#191A1A", size='14'),
-                                margin=dict(
-                                        l=35,
-                                        r=35,
-                                        b=35,
-                                        t=45),
-                                hovermode="closest",
-                                plot_bgcolor='#fffcfc',
-                                paper_bgcolor='#fffcfc',
-                                legend=dict(font=dict(size=10), orientation='h'),
-                                title='Waiting for all user parameters',
-                                mapbox=dict(
-                                        accesstoken=MAPBOX,
-                                        style="dark",
-                                        center=dict(
-                                                lon=-2,
-                                                lat=54.5
-                                                ),
-                                        zoom=4,
-                            )
-                    )
-            )
-        return startup_map
 
 # Update the social media and website link
 @app.callback(
