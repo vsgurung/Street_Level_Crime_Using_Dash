@@ -147,8 +147,9 @@ def calculate_crime_summary(SUMMARY_HEADING, df):
         return None
 
 @cache.memoize(10)
-def generate_startup_map():
-    startup_map = dict(
+def generate_startup_map(n_clicks=None, police_dropdown=None, neighbourhood_dropdown=None, crime_date_dropdown=None):
+    if n_clicks is None and police_dropdown is None and neighbourhood_dropdown is None and crime_date_dropdown is None:
+        startup_map = dict(
                         data =[{
                             'type':'scattermapbox',
                             'lat':54.5,
@@ -181,7 +182,8 @@ def generate_startup_map():
                             )
                     )
             )
-    return startup_map
+        return startup_map
+
 # Crime table layout
 
 #  Layouts
@@ -236,7 +238,9 @@ app.layout = html.Div([
                 ], className='row'),
                 html.Div(
                     [
-                        dcc.Graph(id='crime_map')
+                        dcc.Graph(
+                            id='crime_map',
+                            figure=generate_startup_map())
                     ], className='twelve columns'
                 ),
                 html.Div(
@@ -377,19 +381,15 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
      State(component_id='police_neighbourhood', component_property='value'),
      State(component_id='crime_date', component_property='value')])
 
-def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
-    
-    if n_clicks==0 or n_clicks is None:
-        start_map = generate_startup_map()
-        return start_map
-    elif police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
+def update_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
+    if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
         neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
         crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
         table = create_data_dict(COLUMN_HEADING, crimes)
         neighbourhood_centre = get_neighbourhood_centre(police_force_dropdown, neighbourhood_dropdown)
         if table is not None:
             df = pd.DataFrame(table).dropna()
-            data = dict(
+            figure = dict(
                 data =[
                     {
                         'type':'scattermapbox',
@@ -429,7 +429,7 @@ def generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_
                         )
                     )
             )
-            return data
+            return figure
         else:  # return this data when no crime data found.
             no_data = dict(
                 data =[
