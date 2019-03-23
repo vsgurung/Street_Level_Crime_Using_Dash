@@ -8,9 +8,6 @@ import dash_html_components as html
 import dash_table
 from dash.dependencies import Input, Output, State
 
-# Plotly components for displaying points in map
-from plotly import graph_objs as go 
-
 # Pandas for creating dataframe for maps
 import pandas as pd
 
@@ -163,22 +160,20 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                                 font=dict(color="#fffcfc"),
                                 titlefont=dict(color="#fffcfc", size='14'),
                                 margin=dict(
-                                        l=35,
-                                        r=35,
-                                        b=35,
-                                        t=45),
+                                        l=25,
+                                        r=25,
+                                        b=25,
+                                        t=35),
                                 hovermode="closest",
                                 plot_bgcolor='#191A1A',
                                 paper_bgcolor='#020202',
-                                legend=dict(font=dict(size=10), orientation='h'),
                                 title='Waiting for all user parameters',
                                 mapbox=dict(
                                         accesstoken=MAPBOX,
                                         style="dark",
                                         center=dict(
                                                 lon=-2,
-                                                lat=54.5
-                                                ),
+                                                lat=54.5),
                                         zoom=4,
                             )
                     )
@@ -205,8 +200,8 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                             'text':[[f"Crime Category:{c}<br>Location:{l}"]for c, l in zip(df['Crime Category'], df['Location Name'])]
                         }],
                     layout=dict(
-                            autosize=True,
-                            height=500,
+                            # autosize=True,
+                            # height=500,
                             font=dict(color="#fffcfc"),
                             titlefont=dict(color="#fffcfc", size='14'),
                             margin=dict(
@@ -218,7 +213,7 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                             plot_bgcolor='#191A1A',
                             paper_bgcolor='#020202',
                             legend=dict(
-                                    font=dict(size=10),
+                                    font=dict(color="#fffcfc",size=10),
                                     orientation='h'),
                             title='Anonymised Crime Location',
                             mapbox=dict(
@@ -254,7 +249,6 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                         hovermode="closest",
                         plot_bgcolor='#fffcfc',
                         paper_bgcolor='#fffcfc',
-                        legend=dict(font=dict(size=10), orientation='h'),
                         title=f'No crime in {crime_date_dropdown}.',
                         mapbox=dict(
                                 accesstoken=MAPBOX,
@@ -372,7 +366,7 @@ app.layout = html.Div([
                             id='crime_map',
                             figure=generate_map(),
                             style={'marginTop':'10', 'marginBottom':'10'})
-                    ], className='twelve columns'
+                    ], className='row twelve columns'
                 ),
                 html.Div(
                     id='crime_div',
