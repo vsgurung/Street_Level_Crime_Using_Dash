@@ -269,25 +269,69 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                 )
                 return no_data
 
-# Crime table layout
 
-#  Layouts
-layout_table = dict(
-    autosize=True,
-    height=500,
-    font=dict(color="#191A1A"),
-    titlefont=dict(color="#191A1A", size='14'),
-    margin=dict(
-        l=35,
-        r=35,
-        b=35,
-        t=45
-    ),
-    hovermode="closest",
-    plot_bgcolor='#fffcfc',
-    paper_bgcolor='#fffcfc',
-    legend=dict(font=dict(size=10), orientation='h'),
-)
+def generate_crime_table(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdown=None, crime_date_dropdown=None):
+    if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
+        neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
+        crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
+        table = create_data_dict(COLUMN_HEADING, crimes)
+        if table is not None:
+            df = pd.DataFrame(table).dropna()
+            crime_counts = calculate_crime_summary(SUMMARY_HEADING, df)
+            table_div = [
+                    html.Div([
+                        html.Div(html.H4('Crime Data'), className='eight columns', style={'textAlign':'center','fontFamily':'nunito'}),
+                        html.Div(html.H4('Summary'), className='four columns', style={'textAlign':'center','fontFamily':'nunito'})], className='row'),
+                        html.Div([
+                            html.Div(
+                                dash_table.DataTable(
+                                    id='crime_table',
+                                    columns = [{'name':i, 'id':i} for i in COLUMN_HEADING],
+                                    sorting=True,
+                                    row_selectable='multi',
+                                    n_fixed_rows=1,
+                                    selected_rows=[],
+                                    data=table,
+                                    style_header={
+                                        'backgroundColor':'#a9c1a1',
+                                        'fontWeight':'bold',
+                                        'textAlign':'center',
+                                        'fontFamily':'nunito'
+                                    },
+                                    style_cell={'textAlign':'left','fontFamily':'nunito'},
+                                    style_cell_conditional=[
+                                        {'if':{'column_id':'Crime Month'},
+                                        'width':'120px'}],
+                                    style_table={
+                                        'maxHeight':'500',
+                                        'overflowY':'scroll',
+                                        'overflowX':'scroll'}), className='eight columns'),
+                            html.Div(
+                                dash_table.DataTable(
+                                    id='crime_summary',
+                                    columns = [{'name':i, 'id':i} for i in SUMMARY_HEADING],
+                                    n_fixed_rows=1,
+                                    data = crime_counts,
+                                    style_header={
+                                        'backgroundColor':'#a9c1a1',
+                                        'fontWeight':'bold',
+                                        'textAlign':'center',
+                                        'fontFamily':'nunito'
+                                    },
+                                    style_cell={'textAlign':'left','fontFamily':'nunito'},
+                                    style_table={
+                                        'maxHeight':'500',
+                                        'overflowY':'scroll',
+                                        'overflowX':'scroll'
+                                    }     
+                                    ), className='four columns')], className='row')
+                    ]
+            return table_div
+        else:
+            msg = [html.H5(f'No crimes for the {crime_date_dropdown}.')]
+            return msg
+    else:
+        return None
 
 #################################################################################
 
@@ -394,68 +438,9 @@ def populate_police_neighbourhood(selected_police_force):
      State(component_id='crime_date', component_property='value')])
 
 
-def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
-    if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
-        neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
-        crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
-        table = create_data_dict(COLUMN_HEADING, crimes)
-        if table is not None:
-            df = pd.DataFrame(table).dropna()
-            crime_counts = calculate_crime_summary(SUMMARY_HEADING, df)
-            table_div = [
-                    html.Div([
-                        html.Div(html.H4('Crime Data'), className='eight columns', style={'textAlign':'center','fontFamily':'nunito'}),
-                        html.Div(html.H4('Summary'), className='four columns', style={'textAlign':'center','fontFamily':'nunito'})], className='row'),
-                        html.Div([
-                            html.Div(
-                                dash_table.DataTable(
-                                    id='crime_table',
-                                    columns = [{'name':i, 'id':i} for i in COLUMN_HEADING],
-                                    sorting=True,
-                                    row_selectable='multi',
-                                    n_fixed_rows=1,
-                                    selected_rows=[],
-                                    data=table,
-                                    style_header={
-                                        'backgroundColor':'#a9c1a1',
-                                        'fontWeight':'bold',
-                                        'textAlign':'center',
-                                        'fontFamily':'nunito'
-                                    },
-                                    style_cell={'textAlign':'left','fontFamily':'nunito'},
-                                    style_cell_conditional=[
-                                        {'if':{'column_id':'Crime Month'},
-                                        'width':'120px'}],
-                                    style_table={
-                                        'maxHeight':'500',
-                                        'overflowY':'scroll',
-                                        'overflowX':'scroll'}), className='eight columns'),
-                            html.Div(
-                                dash_table.DataTable(
-                                    id='crime_summary',
-                                    columns = [{'name':i, 'id':i} for i in SUMMARY_HEADING],
-                                    n_fixed_rows=1,
-                                    data = crime_counts,
-                                    style_header={
-                                        'backgroundColor':'#a9c1a1',
-                                        'fontWeight':'bold',
-                                        'textAlign':'center',
-                                        'fontFamily':'nunito'
-                                    },
-                                    style_cell={'textAlign':'left','fontFamily':'nunito'},
-                                    style_table={
-                                        'maxHeight':'500',
-                                        'overflowY':'scroll',
-                                        'overflowX':'scroll'
-                                    }     
-                                    ), className='four columns')], className='row')
-                    ]
-            return table_div
-        else:
-            msg = [html.H5(f'No crimes for the {crime_date_dropdown}.')]
-            return msg
-    else:
-        return None
+def update_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
+    returned_data = generate_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown)
+    return returned_data
 
 
 # Generating map each time input changes
