@@ -148,8 +148,8 @@ def calculate_crime_summary(SUMMARY_HEADING, df):
         return None
 
 @cache.memoize(10)
-def generate_startup_map(n_clicks=None, police_dropdown=None, neighbourhood_dropdown=None, crime_date_dropdown=None):
-    if n_clicks is None and police_dropdown is None and neighbourhood_dropdown is None and crime_date_dropdown is None:
+def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdown=None, crime_date_dropdown=None):
+    if n_clicks is None and police_force_dropdown is None and neighbourhood_dropdown is None and crime_date_dropdown is None:
         startup_map = dict(
                         data =[{
                             'type':'scattermapbox',
@@ -184,6 +184,90 @@ def generate_startup_map(n_clicks=None, police_dropdown=None, neighbourhood_drop
                     )
             )
         return startup_map
+    else:
+        if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
+            neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
+            crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
+            table = create_data_dict(COLUMN_HEADING, crimes)
+            neighbourhood_centre = get_neighbourhood_centre(police_force_dropdown, neighbourhood_dropdown)
+            if table is not None:
+                df = pd.DataFrame(table).dropna()
+                figure = dict(
+                    data =[
+                        {
+                            'type':'scattermapbox',
+                            'lat':df['Latitude'],
+                            'lon':df['Longitude'],
+                            'mode':'markers',
+                            'marker':{
+                                'color':[CRIME_CATEGORY_COLOUR[d] for d in df['Crime Category']]
+                            },
+                            'text':[[f"Crime Category:{c}<br>Location:{l}"]for c, l in zip(df['Crime Category'], df['Location Name'])]
+                        }],
+                    layout=dict(
+                            autosize=True,
+                            height=500,
+                            font=dict(color="#191A1A"),
+                            titlefont=dict(color="#191A1A", size='14'),
+                            margin=dict(
+                                    l=35,
+                                    r=35,
+                                    b=35,
+                                    t=45),
+                            hovermode="closest",
+                            plot_bgcolor='#fffcfc',
+                            paper_bgcolor='#fffcfc',
+                            legend=dict(
+                                    font=dict(size=10),
+                                    orientation='h'),
+                            title='Anonymised Crime Location',
+                            mapbox=dict(
+                                    accesstoken=MAPBOX,
+                                    style="dark",
+                                    center=dict(
+                                            lon=neighbourhood_centre['lon'],
+                                            lat=neighbourhood_centre['lat']
+                                    ),
+                                    zoom=12
+                            )
+                        )
+                )
+                return figure
+            else:  # return this data when no crime data found.
+                no_data = dict(
+                    data =[
+                        {'type':'scattermapbox',
+                        'lat':neighbourhood_centre['lon'],
+                        'lon':neighbourhood_centre['lat'],
+                        'mode':'markers'
+                        }],
+                    layout=dict(
+                        autosize=True,
+                        height=500,
+                        font=dict(color="#191A1A"),
+                        titlefont=dict(color="#191A1A", size='14'),
+                        margin=dict(
+                                l=35,
+                                r=35,
+                                b=35,
+                                t=45),
+                        hovermode="closest",
+                        plot_bgcolor='#fffcfc',
+                        paper_bgcolor='#fffcfc',
+                        legend=dict(font=dict(size=10), orientation='h'),
+                        title=f'No crime in {crime_date_dropdown}.',
+                        mapbox=dict(
+                                accesstoken=MAPBOX,
+                                style="light",
+                                center=dict(
+                                        lon=neighbourhood_centre['lon'],
+                                        lat=neighbourhood_centre['lat']
+                                        ),
+                                zoom=12,
+                                )
+                        )
+                )
+                return no_data
 
 # Crime table layout
 
@@ -241,7 +325,7 @@ app.layout = html.Div([
                     [
                         dcc.Graph(
                             id='crime_map',
-                            figure=generate_startup_map())
+                            figure=generate_map())
                     ], className='twelve columns'
                 ),
                 html.Div(
@@ -383,89 +467,8 @@ def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
      State(component_id='crime_date', component_property='value')])
 
 def update_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
-    if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
-        neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
-        crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
-        table = create_data_dict(COLUMN_HEADING, crimes)
-        neighbourhood_centre = get_neighbourhood_centre(police_force_dropdown, neighbourhood_dropdown)
-        if table is not None:
-            df = pd.DataFrame(table).dropna()
-            figure = dict(
-                data =[
-                    {
-                        'type':'scattermapbox',
-                        'lat':df['Latitude'],
-                        'lon':df['Longitude'],
-                        'mode':'markers',
-                        'marker':{
-                            'color':[CRIME_CATEGORY_COLOUR[d] for d in df['Crime Category']]
-                        },
-                        'text':[[f"Crime Category:{c}<br>Location:{l}"]for c, l in zip(df['Crime Category'], df['Location Name'])]
-                    }],
-                layout=dict(
-                        autosize=True,
-                        height=500,
-                        font=dict(color="#191A1A"),
-                        titlefont=dict(color="#191A1A", size='14'),
-                        margin=dict(
-                                l=35,
-                                r=35,
-                                b=35,
-                                t=45),
-                        hovermode="closest",
-                        plot_bgcolor='#fffcfc',
-                        paper_bgcolor='#fffcfc',
-                        legend=dict(
-                                font=dict(size=10),
-                                orientation='h'),
-                        title='Anonymised Crime Location',
-                        mapbox=dict(
-                                accesstoken=MAPBOX,
-                                style="dark",
-                                center=dict(
-                                        lon=neighbourhood_centre['lon'],
-                                        lat=neighbourhood_centre['lat']
-                                ),
-                                zoom=12
-                        )
-                    )
-            )
-            return figure
-        else:  # return this data when no crime data found.
-            no_data = dict(
-                data =[
-                    {'type':'scattermapbox',
-                    'lat':neighbourhood_centre['lon'],
-                    'lon':neighbourhood_centre['lat'],
-                    'mode':'markers'
-                    }],
-                layout=dict(
-                    autosize=True,
-                    height=500,
-                    font=dict(color="#191A1A"),
-                    titlefont=dict(color="#191A1A", size='14'),
-                    margin=dict(
-                            l=35,
-                            r=35,
-                            b=35,
-                            t=45),
-                    hovermode="closest",
-                    plot_bgcolor='#fffcfc',
-                    paper_bgcolor='#fffcfc',
-                    legend=dict(font=dict(size=10), orientation='h'),
-                    title=f'No crime in {crime_date_dropdown}.',
-                    mapbox=dict(
-                            accesstoken=MAPBOX,
-                            style="light",
-                            center=dict(
-                                    lon=neighbourhood_centre['lon'],
-                                    lat=neighbourhood_centre['lat']
-                                    ),
-                            zoom=12,
-                            )
-                    )
-            )
-            return no_data
+    returned_map = generate_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown)
+    return returned_map
 
 # Update the social media and website link
 @app.callback(
