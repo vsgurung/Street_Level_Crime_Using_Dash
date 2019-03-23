@@ -160,16 +160,16 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                         layout=dict(
                                 autosize=True,
                                 height=500,
-                                font=dict(color="#191A1A"),
-                                titlefont=dict(color="#191A1A", size='14'),
+                                font=dict(color="#fffcfc"),
+                                titlefont=dict(color="#fffcfc", size='14'),
                                 margin=dict(
                                         l=35,
                                         r=35,
                                         b=35,
                                         t=45),
                                 hovermode="closest",
-                                plot_bgcolor='#fffcfc',
-                                paper_bgcolor='#fffcfc',
+                                plot_bgcolor='#191A1A',
+                                paper_bgcolor='#020202',
                                 legend=dict(font=dict(size=10), orientation='h'),
                                 title='Waiting for all user parameters',
                                 mapbox=dict(
@@ -207,16 +207,16 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                     layout=dict(
                             autosize=True,
                             height=500,
-                            font=dict(color="#191A1A"),
-                            titlefont=dict(color="#191A1A", size='14'),
+                            font=dict(color="#fffcfc"),
+                            titlefont=dict(color="#fffcfc", size='14'),
                             margin=dict(
                                     l=35,
                                     r=35,
                                     b=35,
                                     t=45),
                             hovermode="closest",
-                            plot_bgcolor='#fffcfc',
-                            paper_bgcolor='#fffcfc',
+                            plot_bgcolor='#191A1A',
+                            paper_bgcolor='#020202',
                             legend=dict(
                                     font=dict(size=10),
                                     orientation='h'),
@@ -270,6 +270,7 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                 return no_data
 
 
+@cache.memoize(10)
 def generate_crime_table(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdown=None, crime_date_dropdown=None):
     if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
         neighbourhood_boundary = get_neighbourhood_boundary(police_force_dropdown, neighbourhood_dropdown)
@@ -369,7 +370,8 @@ app.layout = html.Div([
                     [
                         dcc.Graph(
                             id='crime_map',
-                            figure=generate_map())
+                            figure=generate_map(),
+                            style={'marginTop':'10', 'marginBottom':'10'})
                     ], className='twelve columns'
                 ),
                 html.Div(
