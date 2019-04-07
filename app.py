@@ -1,5 +1,6 @@
 # This version is currently powering heroku app.
 
+
 # Dash components
 
 import dash
@@ -8,10 +9,12 @@ import dash_html_components as html
 import dash_table
 from dash.dependencies import Input, Output, State
 
+# Plotly components for displaying points in map
+from plotly import graph_objs as go
+
 # Pandas for creating dataframe for maps
 import pandas as pd
 
-import json
 # Caching
 from flask_caching import Cache
 
@@ -19,11 +22,20 @@ from flask_caching import Cache
 from police_api import PoliceAPI
 
 # Dash app
-external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito',
-                        'https://codepen.io/chriddyp/pen/bWLwgP.css'
-                        ]
+external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito', 'https://codepen.io/chriddyp/pen/bWLwgP.css',
+                        {
+                            'href': 'https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css',
+                            'rel': 'stylesheet',
+                            'integrity': 'sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO',
+                            'crossorigin': 'anonymous'
+                        }]
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+external_javascript = ['https://code.jquery.com/jquery-3.3.1.slim.min.js', "https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js",
+                       "https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"]
+
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets,
+                external_scripts=external_javascript)
 
 # Below is needed for heroku deployment
 server = app.server
@@ -160,8 +172,8 @@ def calculate_crime_summary(SUMMARY_HEADING, df):
 
 
 @cache.memoize(10)
-def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdown=None, crime_date_dropdown=None):
-    if n_clicks is None and police_force_dropdown is None and neighbourhood_dropdown is None and crime_date_dropdown is None:
+def generate_startup_map(n_clicks=None, police_dropdown=None, neighbourhood_dropdown=None, crime_date_dropdown=None):
+    if n_clicks is None and police_dropdown is None and neighbourhood_dropdown is None and crime_date_dropdown is None:
         startup_map = dict(
             data=[{
                 'type': 'scattermapbox',
@@ -172,210 +184,74 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
             layout=dict(
                 autosize=True,
                 height=500,
-                font=dict(color="#fffcfc"),
-                titlefont=dict(color="#fffcfc", size='14'),
+                font=dict(color="#191A1A"),
+                titlefont=dict(color="#191A1A", size='14'),
                 margin=dict(
-                    l=25,
-                    r=25,
-                    b=25,
-                    t=35),
+                    l=35,
+                    r=35,
+                    b=35,
+                    t=45),
                 hovermode="closest",
-                plot_bgcolor='#191A1A',
-                paper_bgcolor='#020202',
+                plot_bgcolor='#fffcfc',
+                paper_bgcolor='#fffcfc',
+                legend=dict(font=dict(size=10), orientation='h'),
                 title='Waiting for all user parameters',
                 mapbox=dict(
                     accesstoken=MAPBOX,
                     style="dark",
                     center=dict(
                         lon=-2,
-                        lat=54.5),
+                        lat=54.5
+                    ),
                     zoom=4,
                 )
             )
         )
         return startup_map
-    else:
-        if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
-            neighbourhood_boundary = get_neighbourhood_boundary(
-                police_force_dropdown, neighbourhood_dropdown)
-            crimes = police.get_crimes_area(
-                neighbourhood_boundary, date=crime_date_dropdown)
-            table = create_data_dict(COLUMN_HEADING, crimes)
-            neighbourhood_centre = get_neighbourhood_centre(
-                police_force_dropdown, neighbourhood_dropdown)
-            if table is not None:
-                df = pd.DataFrame(table).dropna()
-                figure = dict(
-                    data=[
-                        {
-                            'type': 'scattermapbox',
-                            'lat': df['Latitude'],
-                            'lon':df['Longitude'],
-                            'mode':'markers',
-                            'marker':{
-                                'color': [CRIME_CATEGORY_COLOUR[d] for d in df['Crime Category']]
-                            },
-                            'text':[[f"Crime Category:{c}<br>Location:{l}"]for c, l in zip(df['Crime Category'], df['Location Name'])]
-                        }],
-                    layout=dict(
-                        # autosize=True,
-                        # height=500,
-                        font=dict(color="#fffcfc"),
-                        titlefont=dict(color="#fffcfc", size='14'),
-                        margin=dict(
-                            l=35,
-                            r=35,
-                            b=35,
-                            t=45),
-                        hovermode="closest",
-                        plot_bgcolor='#191A1A',
-                        paper_bgcolor='#020202',
-                        legend=dict(
-                            font=dict(color="#fffcfc", size=10),
-                            orientation='h'),
-                        title='Anonymised Crime Location',
-                        mapbox=dict(
-                            accesstoken=MAPBOX,
-                            style="dark",
-                            center=dict(
-                                lon=neighbourhood_centre['lon'],
-                                lat=neighbourhood_centre['lat']
-                            ),
-                            zoom=12
-                        )
-                    )
-                )
-                return figure
-            else:  # return this data when no crime data found.
-                no_data = dict(
-                    data=[
-                        {'type': 'scattermapbox',
-                         'lat': neighbourhood_centre['lon'],
-                         'lon':neighbourhood_centre['lat'],
-                         'mode':'markers'
-                         }],
-                    layout=dict(
-                        autosize=True,
-                        height=500,
-                        font=dict(color="#191A1A"),
-                        titlefont=dict(color="#191A1A", size='14'),
-                        margin=dict(
-                            l=35,
-                            r=35,
-                            b=35,
-                            t=45),
-                        hovermode="closest",
-                        plot_bgcolor='#fffcfc',
-                        paper_bgcolor='#fffcfc',
-                        title=f'No crime in {crime_date_dropdown}.',
-                        mapbox=dict(
-                            accesstoken=MAPBOX,
-                            style="light",
-                            center=dict(
-                                lon=neighbourhood_centre['lon'],
-                                lat=neighbourhood_centre['lat']
-                            ),
-                            zoom=12,
-                        )
-                    )
-                )
-                return no_data
+
+# Crime table layout
 
 
-@cache.memoize(10)
-def generate_crime_table(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdown=None, crime_date_dropdown=None):
-    if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
-        neighbourhood_boundary = get_neighbourhood_boundary(
-            police_force_dropdown, neighbourhood_dropdown)
-        crimes = police.get_crimes_area(
-            neighbourhood_boundary, date=crime_date_dropdown)
-        table = create_data_dict(COLUMN_HEADING, crimes)
-        if table is not None:
-            df = pd.DataFrame(table).dropna()
-            crime_counts = calculate_crime_summary(SUMMARY_HEADING, df)
-            table_div = [
-                html.Div([
-                    html.Div(html.H4('Crime Data'), className='eight columns', style={
-                             'textAlign': 'center', 'fontFamily': 'nunito'}),
-                    html.Div(html.H4('Summary'), className='four columns', style={'textAlign': 'center', 'fontFamily': 'nunito'})], className='row'),
-                html.Div([
-                    html.Div(
-                        dash_table.DataTable(
-                            id='crime_table',
-                            columns=[{'name': i, 'id': i}
-                                     for i in COLUMN_HEADING],
-                            sorting=True,
-                            row_selectable='multi',
-                            n_fixed_rows=1,
-                            selected_rows=[],
-                            data=table,
-                            style_header={
-                                'backgroundColor': '#a9c1a1',
-                                'fontWeight': 'bold',
-                                'textAlign': 'center',
-                                'fontFamily': 'nunito'
-                            },
-                            style_cell={'textAlign': 'left',
-                                        'fontFamily': 'nunito'},
-                            style_cell_conditional=[
-                                {'if': {'column_id': 'Crime Month'},
-                                 'width': '120px'}],
-                            style_table={
-                                'maxHeight': '500',
-                                'overflowY': 'scroll',
-                                'overflowX': 'scroll'}), className='eight columns'),
-                    html.Div(
-                        dash_table.DataTable(
-                            id='crime_summary',
-                            columns=[{'name': i, 'id': i}
-                                     for i in SUMMARY_HEADING],
-                            n_fixed_rows=1,
-                            data=crime_counts,
-                            style_header={
-                                'backgroundColor': '#a9c1a1',
-                                'fontWeight': 'bold',
-                                'textAlign': 'center',
-                                'fontFamily': 'nunito'
-                            },
-                            style_cell={'textAlign': 'left',
-                                        'fontFamily': 'nunito'},
-                            style_table={
-                                'maxHeight': '500',
-                                'overflowY': 'scroll',
-                                'overflowX': 'scroll'
-                            }
-                        ), className='four columns')], className='row')
-            ]
-            return table_div
-        else:
-            msg = [html.H5(f'No crimes for the {crime_date_dropdown}.')]
-            return msg
-    else:
-        return None
+#  Layouts
+layout_table = dict(
+    autosize=True,
+    height=500,
+    font=dict(color="#191A1A"),
+    titlefont=dict(color="#191A1A", size='14'),
+    margin=dict(
+        l=35,
+        r=35,
+        b=35,
+        t=45
+    ),
+    hovermode="closest",
+    plot_bgcolor='#fffcfc',
+    paper_bgcolor='#fffcfc',
+    legend=dict(font=dict(size=10), orientation='h'),
+)
 
 #################################################################################
-
 
 app.layout = html.Div([
     html.Div(id='page-title'),
     html.Div(id='neighbourhood_name'),
     html.Div([
         html.Div(html.H4('Select Police Area'), className='three columns', style={
-                 'width': '35%', 'display': 'inline-block', 'textAlign': 'center', 'fontFamily': 'nunito'}),
+                 'width': '15%', 'display': 'inline-block', 'textAlign': 'center', 'fontFamily': 'nunito', 'marginLeft': 'auto', 'marginRight': 'auto'}),
         html.Div(html.H4('Select Police Neighbourhood'), className='three columns', style={
-                 'width': '35%', 'display': 'inline-block', 'textAlign': 'center', 'fontFamily': 'nunito'}),
-        html.Div(html.H4('Select Date'), className='two columns', style={'width': '10%', 'display': 'inline-block', 'textAlign': 'center', 'fontFamily': 'nunito'})], className='row'),
+                 'width': '20%', 'display': 'inline-block', 'textAlign': 'center', 'fontFamily': 'nunito', 'marginLeft': 'auto', 'marginRight': 'auto'}),
+        html.Div(html.H4('Select Date'), className='two columns', style={'width': '8%', 'display': 'inline-block', 'textAlign': 'left', 'fontFamily': 'nunito', 'marginLeft': 'auto', 'marginRight': 'auto'})], className='row'),
     html.Div([
         html.Div([dcc.Dropdown(
             id='police_force_dropdown',
             options=police_force_list,
             placeholder='Select a Police Force....',
             value=None
-        )], className='three columns', style={'width': '35%', 'display': 'inline-block'}),
+        )], className='three columns', style={'width': '35%', 'display': 'inline-block', 'marginLeft': 'auto', 'marginRight': 'auto'}),
         html.Div([dcc.Dropdown(
             id='police_neighbourhood'
         )
-        ], className='three columns', style={'width': '35%', 'display': 'inline-block'}),
+        ], className='three columns', style={'width': '35%', 'display': 'inline-block', 'marginLeft': 'auto', 'marginRight': 'auto'}),
         html.Div([
             dcc.Dropdown(
                 id='crime_date',
@@ -383,32 +259,25 @@ app.layout = html.Div([
                 multi=False,
                 value=None,
                 clearable=False
-            )], className='two columns', style={'width': '10%', 'display': 'inline-block'}),
+            )], className='two columns', style={'width': '10%', 'display': 'inline-block', 'marginLeft': 'auto', 'marginRight': 'auto'}),
         html.Div([
             html.Button(id='submit_button', children='Submit')
-        ], className='one column')
+        ], className='one column', style={'display': 'inline-block', 'textAlign': 'center', 'fontFamily': 'nunito', 'marginLeft': 'auto', 'marginRight': 'auto'})
     ], className='row'),
     html.Div(
         [
             dcc.Graph(
                 id='crime_map',
-                figure=generate_map(),
-                style={'marginTop': '10', 'marginBottom': '10'})
-        ], className='row twelve columns'
+                figure=generate_startup_map())
+        ], className='eleven columns'
     ),
     html.Div(
-        id='crime_div',
-        className='row'),
-    html.Div(
-        id='social_media',
-        className='row'
+        id='crime_div'
     ),
-    # This div is for testing purposes only.
     html.Div(
-        id='selected_table_rows',
-        className='row'
+        id='social_media'
     )
-])
+], style={'marginLeft': 'auto', 'marginRight': 'auto'})
 
 
 # Callback to update the page title of police force
@@ -462,10 +331,75 @@ def populate_police_neighbourhood(selected_police_force):
     [State(component_id='police_force_dropdown', component_property='value'),
      State(component_id='police_neighbourhood', component_property='value'),
      State(component_id='crime_date', component_property='value')])
-def update_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
-    returned_data = generate_crime_table(
-        n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown)
-    return returned_data
+def create_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
+    if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
+        neighbourhood_boundary = get_neighbourhood_boundary(
+            police_force_dropdown, neighbourhood_dropdown)
+        crimes = police.get_crimes_area(
+            neighbourhood_boundary, date=crime_date_dropdown)
+        table = create_data_dict(COLUMN_HEADING, crimes)
+        if table is not None:
+            df = pd.DataFrame(table).dropna()
+            crime_counts = calculate_crime_summary(SUMMARY_HEADING, df)
+            table_div = [
+                html.Div([
+                    html.Div(html.H4('Crime Data'), className='eight columns', style={
+                             'textAlign': 'center', 'fontFamily': 'nunito'}),
+                    html.Div(html.H4('Summary'), className='three columns', style={'textAlign': 'center', 'fontFamily': 'nunito'})], className='row', style={'display': 'inline-block', 'marginLeft': 'auto', 'marginRight': 'auto'}),
+                html.Div([
+                    html.Div(
+                        dash_table.DataTable(
+                            id='crime_table',
+                            columns=[{'name': i, 'id': i}
+                                     for i in COLUMN_HEADING],
+                            sorting=True,
+                            row_selectable='multi',
+                            n_fixed_rows=1,
+                            selected_rows=[],
+                            data=table,
+                            style_header={
+                                'backgroundColor': '#a9c1a1',
+                                'fontWeight': 'bold',
+                                'textAlign': 'center',
+                                'fontFamily': 'nunito'
+                            },
+                            style_cell={'textAlign': 'left',
+                                        'fontFamily': 'nunito'},
+                            style_cell_conditional=[
+                                {'if': {'column_id': 'Crime Month'},
+                                 'width': '120px'}],
+                            style_table={
+                                'maxHeight': '500',
+                                'overflowY': 'scroll',
+                                'overflowX': 'scroll'}), className='eight columns', style={'marginLeft': 'auto', 'marginRight': 'auto'}),
+                    html.Div(
+                        dash_table.DataTable(
+                            id='crime_summary',
+                            columns=[{'name': i, 'id': i}
+                                     for i in SUMMARY_HEADING],
+                            n_fixed_rows=1,
+                            data=crime_counts,
+                            style_header={
+                                'backgroundColor': '#a9c1a1',
+                                'fontWeight': 'bold',
+                                'textAlign': 'center',
+                                'fontFamily': 'nunito'
+                            },
+                            style_cell={'textAlign': 'left',
+                                        'fontFamily': 'nunito'},
+                            style_table={
+                                'maxHeight': '500',
+                                'overflowY': 'scroll',
+                                'overflowX': 'scroll'
+                            }
+                        ), className='four columns')], className='row', style={'marginLeft': 'auto', 'marginRight': 'auto'})
+            ]
+            return table_div
+        else:
+            msg = [html.H5(f'No crimes for the {crime_date_dropdown}.')]
+            return msg
+    else:
+        return None
 
 
 # Generating map each time input changes
@@ -476,9 +410,92 @@ def update_crime_table(n_clicks, police_force_dropdown, neighbourhood_dropdown, 
      State(component_id='police_neighbourhood', component_property='value'),
      State(component_id='crime_date', component_property='value')])
 def update_map(n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown):
-    returned_map = generate_map(
-        n_clicks, police_force_dropdown, neighbourhood_dropdown, crime_date_dropdown)
-    return returned_map
+    if police_force_dropdown is not None and neighbourhood_dropdown is not None and crime_date_dropdown is not None:
+        neighbourhood_boundary = get_neighbourhood_boundary(
+            police_force_dropdown, neighbourhood_dropdown)
+        crimes = police.get_crimes_area(
+            neighbourhood_boundary, date=crime_date_dropdown)
+        table = create_data_dict(COLUMN_HEADING, crimes)
+        neighbourhood_centre = get_neighbourhood_centre(
+            police_force_dropdown, neighbourhood_dropdown)
+        if table is not None:
+            df = pd.DataFrame(table).dropna()
+            figure = dict(
+                data=[
+                    {
+                        'type': 'scattermapbox',
+                        'lat': df['Latitude'],
+                        'lon':df['Longitude'],
+                        'mode':'markers',
+                        'marker':{
+                            'color': [CRIME_CATEGORY_COLOUR[d] for d in df['Crime Category']]
+                        },
+                        'text':[[f"Crime Category:{c}<br>Location:{l}"]for c, l in zip(df['Crime Category'], df['Location Name'])]
+                    }],
+                layout=dict(
+                    autosize=True,
+                    height=500,
+                    font=dict(color="#191A1A"),
+                    titlefont=dict(color="#191A1A", size='14'),
+                    margin=dict(
+                        l=35,
+                        r=35,
+                        b=35,
+                        t=45),
+                    hovermode="closest",
+                    plot_bgcolor='#fffcfc',
+                    paper_bgcolor='#fffcfc',
+                    legend=dict(
+                        font=dict(size=10),
+                        orientation='h'),
+                    title='Anonimised Crime Location',
+                    mapbox=dict(
+                        accesstoken=MAPBOX,
+                        style="dark",
+                        center=dict(
+                            lon=neighbourhood_centre['lon'],
+                            lat=neighbourhood_centre['lat']
+                        ),
+                        zoom=12
+                    )
+                )
+            )
+            return figure
+        else:  # return this data when no crime data found.
+            no_data = dict(
+                data=[
+                    {'type': 'scattermapbox',
+                     'lat': neighbourhood_centre['lon'],
+                     'lon':neighbourhood_centre['lat'],
+                     'mode':'markers'
+                     }],
+                layout=dict(
+                    autosize=True,
+                    height=500,
+                    font=dict(color="#191A1A"),
+                    titlefont=dict(color="#191A1A", size='14'),
+                    margin=dict(
+                        l=35,
+                        r=35,
+                        b=35,
+                        t=45),
+                    hovermode="closest",
+                    plot_bgcolor='#fffcfc',
+                    paper_bgcolor='#fffcfc',
+                    legend=dict(font=dict(size=10), orientation='h'),
+                    title=f'No crime in {crime_date_dropdown}.',
+                    mapbox=dict(
+                        accesstoken=MAPBOX,
+                        style="light",
+                        center=dict(
+                            lon=neighbourhood_centre['lon'],
+                            lat=neighbourhood_centre['lat']
+                        ),
+                        zoom=12,
+                    )
+                )
+            )
+            return no_data
 
 # Update the social media and website link
 
@@ -500,15 +517,6 @@ def update_media_links(input_police_force):
         return data
     else:
         return None
-
-# Code for displaying the data of rows selected by user
-@app.callback(
-    Output(component_id='selected_table_rows', component_property='children'),
-    [Input(component_id='crime_table', component_property='derived_virtual_data'),
-     Input(component_id='crime_table', component_property='derived_virtual_selected_rows')]
-)
-def display_selected_rows(rows, derived_virtual_selected_rows):
-    return json.dumps(derived_virtual_selected_rows)
 
 
 # Running the app
