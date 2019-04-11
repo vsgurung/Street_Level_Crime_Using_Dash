@@ -356,6 +356,7 @@ app.layout = html.Div([
                         dcc.Graph(
                             id='crime_map',
                             figure=generate_map(),
+                            config={'scrollZoom':True},
                             style={'marginTop':'10', 'marginBottom':'10'})
                     ], className='row twelve columns'
                 ),
