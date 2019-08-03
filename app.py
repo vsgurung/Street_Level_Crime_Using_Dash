@@ -1,7 +1,5 @@
 # This version is currently powering heroku app.
 # Dash components
-
-
 import dash
 import dash_core_components as dcc 
 import dash_html_components as html
@@ -23,7 +21,7 @@ external_stylesheets = ['https://fonts.googleapis.com/css?family=Nunito']
 
 # Dash app
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-server = app.server # Below is needed for heroku deployment
+server = app.server # Needed for heroku deployment
 cache = Cache(server, config={"CACHE_TYPE":"simple"})
 app.title = 'Street Level Crime'
 
@@ -47,8 +45,8 @@ CRIME_CATEGORY_COLOUR ={
                         'Other crime':'light blue',
                         'Robbery':'Yellow'}
 
-police = PoliceAPI()
 
+police = PoliceAPI()
 # Get the date range of data
 dt_range = police.get_dates()
 
@@ -159,6 +157,9 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                                 plot_bgcolor='#191A1A',
                                 paper_bgcolor='#020202',
                                 title='Waiting for all user parameters',
+                                legend=dict(
+                                    font=dict(color="#fffcfc",size=10),
+                                    orientation='h'),
                                 mapbox=dict(
                                         accesstoken=MAPBOX,
                                         style="dark",
@@ -241,6 +242,9 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                         plot_bgcolor='#fffcfc',
                         paper_bgcolor='#fffcfc',
                         title=f'No crime in {crime_date_dropdown}.',
+                        legend=dict(
+                                    font=dict(color="#fffcfc",size=10),
+                                    orientation='h'),
                         mapbox=dict(
                                 accesstoken=MAPBOX,
                                 style="light",
