@@ -369,8 +369,8 @@ app.layout = html.Div([
                     className='row'),
                 html.Div(
                     id='social_media',
-                    className='row'
-                )
+                    className='row',
+                    style={'width':'100%', 'text-align':'center'})
 ])
 
 
@@ -453,8 +453,9 @@ def update_media_links(input_police_force):
         media = force.engagement_methods
         data = [
             html.Div(
-                html.A(f'{g["title"].title()}', href=f'{g["url"]}', target='_blank'), 
-                className='two columns', style={'display':'inline-block','fontFamily':'nunito'})for g in media]
+                html.A(f'{m["title"].title()}', href=f'{m["url"]}', target='_blank'),
+                className='row',
+                style={'display':'inline-block','fontFamily':'nunito', 'text-align':'center', 'position':'relative', 'padding':'20px'})for m in media]
         return data
     else:
         return None
