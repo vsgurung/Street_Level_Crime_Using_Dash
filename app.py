@@ -94,16 +94,7 @@ def get_neighbourhood_boundary(police_name, neighbourhood_name):
     else:
         return None
 
-def get_boundary_coords(neighbourhood_bdy):
-    if neighbourhood_bdy:
-        coords = {}
-        lats = [coord[0] for coord in neighbourhood_bdy]
-        longs = [coord[1] for coord in neighbourhood_bdy]
-        coords['lat'] = lats
-        coords['long'] = longs
-        return coords
-    else:
-        return None
+
 @cache.memoize(10)
 def get_neighbourhood_centre(police_name, neighbourhood_name):
     if (police_name is not None) and (neighbourhood_name is not None):
@@ -187,7 +178,6 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
             crimes = police.get_crimes_area(neighbourhood_boundary, date=crime_date_dropdown)
             table = create_data_dict(COLUMN_HEADING, crimes)
             neighbourhood_centre = get_neighbourhood_centre(police_force_dropdown, neighbourhood_dropdown)
-            bdy_vertices = get_boundary_coords(neighbourhood_boundary)
             if table is not None:
                 df = pd.DataFrame(table).dropna()
                 figure = dict(
@@ -207,8 +197,8 @@ def generate_map(n_clicks=None, police_force_dropdown=None, neighbourhood_dropdo
                         ## The neighbourhood boundary layer
                         {
                             'type':'scattermapbox',
-                            'lat':bdy_vertices['lat'],
-                            'lon':bdy_vertices['long'],
+                            'lat':[coord[0] for coord in neighbourhood_boundary],
+                            'lon':[coord[1] for coord in neighbourhood_boundary],
                             'mode':'lines',
                             'name':f'{neighbourhood_dropdown} neighbourhood boundary',
                             'hoverinfo':'text'
