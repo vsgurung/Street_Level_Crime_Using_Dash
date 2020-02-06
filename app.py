@@ -1,4 +1,4 @@
-# This version is currently powering heroku app.
+# Amended version
 # Dash components
 import dash
 import dash_core_components as dcc 
@@ -290,11 +290,13 @@ def generate_crime_table(n_clicks=None, police_force_dropdown=None, neighbourhoo
                                 dash_table.DataTable(
                                     id='crime_table',
                                     columns = [{'name':i, 'id':i} for i in COLUMN_HEADING],
-                                    sorting=True,
+                                    sort_action='native',
+                                    filter_action='native',
                                     row_selectable='multi',
-                                    n_fixed_rows=1,
+                                    fixed_rows=1,
                                     selected_rows=[],
                                     data=table,
+                                    page_size=10,
                                     style_header={
                                         'backgroundColor':'#a9c1a1',
                                         'fontWeight':'bold',
@@ -313,7 +315,7 @@ def generate_crime_table(n_clicks=None, police_force_dropdown=None, neighbourhoo
                                 dash_table.DataTable(
                                     id='crime_summary',
                                     columns = [{'name':i, 'id':i} for i in SUMMARY_HEADING],
-                                    n_fixed_rows=1,
+                                    fixed_rows=1,
                                     data = crime_counts,
                                     style_header={
                                         'backgroundColor':'#a9c1a1',
@@ -353,7 +355,8 @@ app.layout = html.Div([
                         value=None
                     )], className='three columns', style={'width':'35%', 'display':'inline-block'}),
                     html.Div([dcc.Dropdown(
-                        id='police_neighbourhood'
+                        id='police_neighbourhood',
+                        placeholder ='Select Police Neighbourhood'
                            )
                     ], className='three columns', style={'width':'35%', 'display':'inline-block'}),
                     html.Div([
@@ -423,10 +426,10 @@ def populate_police_neighbourhood(selected_police_force):
     """
     if selected_police_force is not None:
         police_id = get_police_force_id(selected_police_force)
-        police_neighbourhoods = [{'label':n.name, 'value':n.name} for n in police.get_neighbourhoods(police_id)]
+        police_neighbourhoods = list({'label':n.name, 'value':n.name} for n in police.get_neighbourhoods(police_id))
         return police_neighbourhoods
     else:
-        return None
+        return list()
 
 # Callback to create crime table  
 @app.callback(
