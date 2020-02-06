@@ -1,7 +1,6 @@
 # packages in environment at C:\Users\Bhootnath\Anaconda3\envs\plotly_dash:
 #
 # Name                    Version                   Build  Channel
-click                     7.0                        py_0    conda-forge
 dash                      1.8.0                      py_0    conda-forge
 dash-core-components      1.7.0                      py_0    conda-forge
 dash-html-components      1.0.2                      py_0    conda-forge
