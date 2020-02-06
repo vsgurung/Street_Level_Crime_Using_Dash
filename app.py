@@ -1,4 +1,4 @@
-# Amended version
+# The version supporting the heroku app.
 # Dash components
 import dash
 import dash_core_components as dcc 
