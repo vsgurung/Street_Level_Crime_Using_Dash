@@ -296,7 +296,7 @@ def generate_crime_table(n_clicks=None, police_force_dropdown=None, neighbourhoo
                                     fixed_rows=1,
                                     selected_rows=[],
                                     data=table,
-                                    page_size=10,
+                                    page_size=15,
                                     style_header={
                                         'backgroundColor':'#a9c1a1',
                                         'fontWeight':'bold',
