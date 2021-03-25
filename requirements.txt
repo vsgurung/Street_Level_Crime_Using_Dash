@@ -26,7 +26,7 @@ police-api-client==1.2.2
 pylint==2.2.2
 python-dateutil==2.8.1
 pytz==2019.2
-PyYAML==5.1.2
+PyYAML==5.4
 requests==2.22.0
 responses==0.10.6
 retrying==1.3.3
